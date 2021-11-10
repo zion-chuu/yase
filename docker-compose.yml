@@ -1,0 +1,40 @@
+version: '3'
+services:
+  rails:
+    build: .docker/development/rails
+    command: /bin/sh -c "rm -f /rails/tmp/pids/server.pid && (bundle check || bundle install) && bundle exec rails s -b '0.0.0.0' -e development"
+    volumes:
+      - .:/rails
+      - gems:/bundle
+      - tmp:/rails/tmp
+      - ${YASELABO_SSH_DIRECTRY}:/root/.ssh
+    ports:
+      - 3000:3000
+      - 1234:1234
+    environment:
+      MYSQL_USERNAME: mysql
+      MYSQL_PASSWORD: example
+    env_file: .env
+    depends_on:
+      - db
+      - redis
+    stdin_open: true
+    tty: true
+  db:
+    image: mysql:5.6
+    command: mysqld --character-set-server=utf8 --collation-server=utf8_unicode_ci
+    volumes:
+      - mysql-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+      MYSQL_DATABASE: lime_media_development
+      MYSQL_USER: mysql
+      MYSQL_PASSWORD: example
+    tty: true
+  redis:
+    image: redis:4-alpine
+    tty: true
+volumes:
+  gems:
+  mysql-data:
+  tmp:

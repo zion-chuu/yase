@@ -1,0 +1,45 @@
+box: islands5/ruby23
+no-response-timeout: 30
+command-timeout: 60
+services:
+  - name: db
+    id: mysql:5.6
+    env:
+      MYSQL_ROOT_PASSWORD: example
+      MYSQL_DATABASE: lime_media_development
+      MYSQL_USER: mysql
+      MYSQL_PASSWORD: example
+  - name: redis
+    id: redis:4-alpine
+
+build:
+  steps:
+    - script:
+        name: env
+        code: |
+          env
+    - rails-database-yml:
+      service: mysql-docker
+    - script:
+        name: env
+        code: |
+          env
+
+deploy:
+  steps:
+    - bundle-install
+    - script:
+        name: make .ssh directory
+        code: mkdir -p "$HOME/.ssh"
+    - create-file:
+        name: write ssh key
+        filename: $HOME/.ssh/id_rsa
+        overwrite: true
+        hide-from-log: true
+        content: $wercker_PRIVATE
+    - script:
+        name: set permissions for ssh key
+        code: chmod 0600 $HOME/.ssh/id_rsa
+    - cap:
+        stage: $WERCKER_DEPLOYTARGET_NAME
+        tasks: deploy
